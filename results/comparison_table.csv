@@ -1,0 +1,5 @@
+name,loss
+"model_[34, 64, 32, 1]_output_Sigmoid_intermediate_ReLU_normalized_data_True_loss_MSELoss",0.0017625414182401
+"model_[34, 64, 32, 1]_output_Sigmoid_intermediate_ReLU_normalized_data_True_loss_L1Loss",0.01501902041773
+"model_[34, 64, 32, 1]_output_LinearClamp_intermediate_ReLU_normalized_data_True_loss_L1Loss",0.0157689481305869
+"model_[34, 64, 32, 1]_output_LinearClamp_intermediate_ReLU_normalized_data_True_loss_MSELoss",0.0015845594366922851
