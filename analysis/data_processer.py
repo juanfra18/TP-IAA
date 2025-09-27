@@ -210,6 +210,8 @@ class DataProcesser:
             vect , result  = self.process_entry(entry)
             if result:
                 df.loc[len(df)] = vect
+                
+        df.dropna(inplace=True)
         
         return df
 
@@ -231,7 +233,7 @@ class DataProcesser:
             
             probability : float = int(entry["postweight_unscaled"]) / self.population
             
-            return vect + [score/self.MAX_SCORE, probability], True
+            return vect + [score, probability], True
         except Exception as e:
             print(f"Error processing entry {entry}: {e}")
             return [], False
