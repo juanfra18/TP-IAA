@@ -192,9 +192,10 @@ class DataProcesser:
             null_percent = (null_count / len(dataset))
             if null_percent > self.ignoring_threshold:
                 self.ignored_columns.append(col)
+            dataset[col] = dataset[col].dropna()
+            dataset[col] = dataset[dataset[col] != "."][col]
               
-        dataset[self.score_key] = dataset[self.score_key].dropna()
-        dataset[self.score_key] = dataset[dataset[self.score_key] != "."][self.score_key]
+    
                 
         self.population = dataset["postweight_unscaled"].sum()
                 
@@ -206,25 +207,42 @@ class DataProcesser:
         
         for _, row in self.dataset.iterrows():
             entry : dict[str, str] = row.to_dict()
-            vect : list = self.process_entry(entry)
-            df.loc[len(df)] = vect
+            vect , result  = self.process_entry(entry)
+            if result:
+                df.loc[len(df)] = vect
         
         return df
 
     
-    def process_entry(self, entry: dict[str,str]) -> list:
-        
-        vect : list[int] = []
-        
-        for key in self.dictionary:
-            if key in self.ignored_columns:
-                continue
-            vect.append(self.dictionary[key].get(entry[key], 0))
+    def process_entry(self, entry: dict[str,str]) -> tuple[list,bool]:
+        try:
+            vect : list[int] = []
             
+            for key in self.dictionary:
+                if key in self.ignored_columns:
+                    continue
+                if self.dictionary[key] == {}:
+                    vect.append(int(entry[key]))
+                else:
+                    vect.append(self.dictionary[key].get(entry[key], 0))
+                
+                
+            score : float = float(entry[self.score_key])
             
-        score : float = float(entry[self.score_key])
+            probability : float = int(entry["postweight_unscaled"]) / self.population
+            
+            return vect + [score/self.MAX_SCORE, probability], True
+        except Exception as e:
+            print(f"Error processing entry {entry}: {e}")
+            return [], False
         
-        probability : float = int(entry["postweight_unscaled"]) / self.population
         
-        return vect + [score/self.MAX_SCORE, probability]
         
+if __name__ == "__main__":
+    df = pd.read_csv("datos/Resilience_CleanOnly_v1.csv", encoding="latin1")
+    
+    data_processer = DataProcesser(df)
+    
+    result_df = data_processer.process_dataset()
+    
+    result_df.to_csv("datos/Resilience_CleanOnly_v1_PREPROCESSED.csv", index=False)
