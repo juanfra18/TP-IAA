@@ -1,0 +1,10 @@
+name,loss
+"model_[34, 64, 32, 1]_output_Sigmoid_intermediate_ReLU_normalized_data_True_loss_MSELoss",0.0017625414182401
+"model_[34, 64, 32, 1]_output_Sigmoid_intermediate_ReLU_normalized_data_True_loss_L1Loss",0.01501902041773
+"model_[34, 64, 32, 1]_output_LinearClamp_intermediate_ReLU_normalized_data_True_loss_L1Loss",0.0157689481305869
+"model_[34, 64, 32, 1]_output_LinearClamp_intermediate_ReLU_normalized_data_True_loss_MSELoss",0.0015845594366922
+"model_[33, 64, 32, 1]_output_LinearClamp_intermediate_ReLU_normalized_data_True_loss_MSELoss",0.0158784927286234
+"model_[33, 32, 32, 1]_output_Softmax_intermediate_ReLU_normalized_data_True_loss_MSELoss",0.0169706207089206
+"model_[33, 32, 32, 1]_output_Sigmoid_intermediate_ReLU_normalized_data_True_loss_MSELoss",0.0167128954176193
+"model_[33, 64, 32, 1]_output_Sigmoid_intermediate_Sigmoid_normalized_data_True_loss_MSELoss",0.0169549603936492
+"model_[33, 32, 32, 1]_output_Sigmoid_intermediate_Sigmoid_normalized_data_True_loss_MSELoss",0.01721091241872866
