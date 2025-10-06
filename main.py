@@ -15,8 +15,8 @@ import os
 
 
 df = pd.read_csv("datos/Resilience_CleanOnly_v1_PREPROCESSED.csv", encoding="latin1")
-sizes = [len(df.columns)-2, 64, 32,1]
-output_activation = LinearClamp
+sizes = [len(df.columns)-2, 32,32,1]
+output_activation = nn.Sigmoid
 intermediate_activation = nn.ReLU
 normalize_output = True
 loss = nn.MSELoss
@@ -24,19 +24,19 @@ name = f"model_{sizes}_output_{output_activation.__name__}_intermediate_{interme
 
 comparison_table = pd.read_csv("results/comparison_table.csv")
 
-probabilities = df["probability"]
+probabilities = df["weight"]
 
 
-weight_path = f"results/model_{sizes}.pth" if os.path.exists(f"results/{name}.pth") else None
+weight_path = f"results/{name}.pth" if os.path.exists(f"results/{name}.pth") else None
 logger = Logger("results/logs")
 
-train_df = df.sample(frac=0.8, random_state=42)
+train_df = df.sample(frac=0.6, random_state=42)
 val_df = df.drop(train_df.index)
 
 train_data = CustomDataset(train_df, normalize_output)
 val_data = CustomDataset(val_df, normalize_output)
-train_loader = DataLoader(train_data, batch_size=32, shuffle=True)
-val_loader = DataLoader(val_data, batch_size=32, shuffle=False)
+train_loader = DataLoader(train_data, batch_size=2, shuffle=True)
+val_loader = DataLoader(val_data, batch_size=2, shuffle=False)
 
 model = Model(weight_path,description=name, hidden_sizes=sizes, output_activation=output_activation)  
 criterion = loss()

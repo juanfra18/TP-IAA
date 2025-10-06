@@ -1,245 +1,112 @@
 import pandas as pd
+import numpy as np
+from sympy import true
 
 class DataProcesser:
     
-    dictionary: dict[str,dict[str,int]] = {
-        "r8.2_who5_fct4": {
-            "Poor": 1,
-            "Good": 2,
-            "Very good": 3,
-            "Excellent": 4
-        },
-        "r8.2_who5_Iexcel": {
-            "Other": 1,
-            "Excellent": 2
-        },
-        "age_fct6": {
-            "15-24": 1,
-            "25-34": 2,
-            "35-44": 3,
-            "45-54": 4,
-            "55-64": 5,
-            "65+": 6
-        },
-        "gender_fct2": {
-            "Male": 1,
-            "Female": 2
-        },
-        "eth_fct4": {
-            "European/Other": 1,
-            "Maori": 2,
-            "Pacific": 3,
-            "Asian": 4
-        },
-        "education_qual": {
-            "No formal qualification": 1,
-            "High school": 2,
-            "Certificate or diploma": 3,
-            "Bachelor or above": 4
-        },
-        "r4_previnworkforce_fct3": {
-            "Employed": 1,
-            "Unemployed": 2,
-            "Retired": 3
-        },
-        "r4.5_fct3": {
-            "Not essential worker": 1,
-            "Yes essential worker": 2
-        },
-        "r7.1_fct3": {
-            "Never": 1,
-            "Past": 2,
-            "Current": 3
-        },
-        "income_band": {
-            "$30,000 or less": 1,
-            "$30,001– $70,000": 2,
-            "$70,001 – $100,000": 3,
-            "$100,001 – $150,000": 4,
-            "$150,001 or more": 5,
-            "Prefer not to say": 6
-        },
-        "r5.2_fct2": {
-            "Poor or Fair": 1,
-            "Good or better": 2
-        },
-        "r8.17_fct2": {
-            "No": 1,
-            "Yes past diagnosis": 2
-        },
-        "r5.10": {
-            "No": 1,
-            "Yes": 2
-        },
-        "r9.1_fct2": {
-            "No": 1,
-            "Yes": 2
-        },
-        "r3.2_fct4": {
-            "Live by myself": 1,
-            "With one adult": 2,
-            "With other adults": 3,
-            "With children": 4
-        },
-        "r3.3_num": {},  # numeric count
-        "r3.3_fct5": {
-            "1": 1,
-            "2": 2,
-            "3-5": 3,
-            "6-9": 4,
-            "10+": 5
-        },
-        "r3.7_fct3": {
-            "High": 1,
-            "Medium": 2,
-            "Low": 3
-        },
-        "r3.8": {
-            "It has stayed the same": 1,
-            "It has increased": 2,
-            "It has decreased": 3
-        },
-        "r4_lesswork_fct2": {
-            "Not less work": 1,
-            "Less work": 2
-        },
-        "r4_lostwork_fct2": {
-            "Not lost work": 1,
-            "Lost work": 2
-        },
-        "r5.6_fct3": {
-            "No": 1,
-            "Suspected": 2,
-            "Tested": 3,
-            "Confirmed": 4
-        },
-        "r3.4": {
-            "Not satisfied": 1,
-            "Satisfied": 2,
-            "Extremely satisfied": 3
-        },
-        "r3.10": {
-            "Not well": 1,
-            "Well": 2,
-            "Very well": 3
-        },
-        "r3.11": {
-            "None": 1,
-            "A little": 2,
-            "More than a little": 3
-        },
-        "r3.12": {
-            "Less than 2 hours": 1,
-            "Two plus hours": 2
-        },
-        "r8.16_1_fct2": {
-            "No": 1,
-            "Yes": 2
-        },
-        "r8.16_2_fct2": {
-            "No": 1,
-            "Yes": 2
-        },
-        "r8.16_3_fct2": {
-            "No": 1,
-            "Yes": 2
-        },
-        "r8.16_6_fct2": {
-            "No": 1,
-            "Yes": 2
-        },
-        "r8.16_4_fct2": {
-            "No": 1,
-            "Yes": 2
-        },
-        "r12.1_11_fct2": {
-            "No": 1,
-            "Yes": 2
-        },
-        "r12.1_13_fct2": {
-            "No": 1,
-            "Yes": 2
-        },
-        "r6.4_fct2": {
-            "Low level": 1,
-            "Hazardous level": 2
-        },
-        "r6.5_fct2": {
-            "Low level": 1,
-            "Hazardous level": 2
-        },
-        "r6_change_fct3": {
-            "No change": 1,
-            "Increase": 2,
-            "Decrease": 3
-        }
+    column_renames =  {
+        'r8.2_who5_num': 'target',
+        'postweight_unscaled': 'weight',
+        'age_fct6': 'age_group',
+        'gender_fct2': 'gender',
+        'eth_fct4': 'ethnicity',
+        'r4_previnworkforce_fct3': 'employment_pre_lockdown',
+        'r4.5_fct3': 'work_type',
+        'r7.1_fct3': 'smoking_status',
+        'r5.2_fct2': 'self_rated_health',
+        'r8.17_fct2': 'mental_health_diagnosis',
+        'r5.10': 'physical_disability',
+        'r9.1_fct2': 'trauma_exposure',
+        'r3.2_fct4': 'bubble_type',
+        'r3.3_num': 'bubble_size_num',
+        'r3.7_fct3': 'social_connection_freq',
+        'r3.8': 'contact_change',
+        'r4_lesswork_fct2': 'less_work',
+        'r4_lostwork_fct2': 'lost_work',
+        'r5.6_fct3': 'covid_exposure',
+        'r3.4': 'bubble_satisfaction',
+        'r3.10': 'bubble_relationships',
+        'r3.11': 'loneliness',
+        'r3.12': 'time_covid_info',
+        'income_band': 'income_band',
+        'education_qual': 'education_qual',
+        'r8.16_1_fct2': 'stress_self_health',
+        'r8.16_2_fct2': 'stress_family_health',
+        'r8.16_3_fct2': 'stress_finances',
+        'r8.16_6_fct2': 'stress_employment',
+        'r8.16_4_fct2': 'stress_covid_conseq',
+        'r12.1_11_fct2': 'positive_lockdown_personal',
+        'r12.1_13_fct2': 'positive_lockdown_society',
+        'r6.4_fct2': 'alcohol_pre',
+        'r6.5_fct2': 'alcohol_during',
+        'r6_change_fct3': 'alcohol_change',
     }
-    
-    ignored_columns : list[str] = []
 
+    
     MAX_SCORE : int = 25
-    ignoring_threshold : float
     dataset : pd.DataFrame
     population : int
-    score_key : str = "r8.2_who5_num"
+    score_key : str = "target"
     
     def __init__(self,dataset : pd.DataFrame, ignoring_threshold: float = 0.40) -> None:
-        self.dataset = dataset
-        self.ignoring_threshold = ignoring_threshold
-        
-        for col in dataset.columns:
-            null_count = dataset[col].isnull().sum()
-            null_percent = (null_count / len(dataset))
-            if null_percent > self.ignoring_threshold:
-                self.ignored_columns.append(col)
-            dataset[col] = dataset[col].dropna()
-            dataset[col] = dataset[dataset[col] != "."][col]
-              
-    
-                
-        self.population = dataset["postweight_unscaled"].sum()
-                
-    def process_dataset(self) -> pd.DataFrame:
-        
-        columns = [col for col in self.dictionary if col not in self.ignored_columns] + ["score", "probability"]
- 
-        df : pd.DataFrame = pd.DataFrame(columns=columns)
-        
-        for _, row in self.dataset.iterrows():
-            entry : dict[str, str] = row.to_dict()
-            vect , result  = self.process_entry(entry)
-            if result:
-                df.loc[len(df)] = vect
-                
-        df.dropna(inplace=True)
-        
-        return df
+        self.data = dataset
 
+        self.data.rename(columns=self.column_renames, inplace=True)
+        self.population = self.data["weight"].sum()
+        
+    def clean_dataset(self) -> pd.DataFrame:
+
+        self.data = self.data.drop(columns = [c for c in self.data.columns if c not in self.column_renames.values()])
+        
+
+        
+        keys_drop_na = ["employment_pre_lockdown","bubble_type"]
+        for key in keys_drop_na:
+            self.data[key].dropna(inplace=True)
+            
+        self.data['weight'] = self.data['weight'] / self.population
+            
+        self.data['lost_work'] = np.where(self.data['lost_work'].isnull() & (self.data['employment_pre_lockdown']!='Employed'), 'Without work', self.data['lost_work'])
+        
+        self.data['loneliness'] = np.where(self.data['loneliness'].isnull(), 'None', self.data['loneliness'])
+        
+        self.data['less_work'] = np.where(self.data['less_work'].isnull() & (self.data['employment_pre_lockdown']!='Employed'), 'Without work', self.data['less_work'])
+        
+        self.data['work_type'] = np.where(self.data['work_type'].isnull() & (self.data['employment_pre_lockdown']!='Employed'), 'Without work', self.data['work_type'])
+        self.data['work_type'] = np.where(self.data['work_type'].isnull(), 'Not essential worker', self.data['work_type'])
+        
+        self.data['bubble_relationships'] = np.where(self.data['bubble_relationships'].isnull() & (self.data['bubble_type']=='Live by myself'), 'Without bubble', self.data['bubble_relationships'])
+        self.data['bubble_relationships'] = np.where(self.data['bubble_relationships'].isnull(), 'Very well', self.data['bubble_relationships'])
+        
+        self.data['mental_health_diagnosis'] = np.where(self.data['mental_health_diagnosis'].isnull(), 'No', self.data['mental_health_diagnosis'])
+        
+        self.data['social_connection_freq'] = np.where(self.data['social_connection_freq'].isnull(), 'High', self.data['social_connection_freq'])
+        
+        self.data['gender'] = np.where(self.data['gender'].isnull(), 'Female', self.data['gender'])
+        
+        self.data['contact_change'] = np.where(self.data['contact_change'].isnull(), 'It has stayed the same', self.data['contact_change'])
+        
+        self.data['positive_lockdown_personal'] = np.where(self.data['positive_lockdown_personal'].isnull(), 'No', self.data['positive_lockdown_personal'])
+        
+        self.data['positive_lockdown_society'] = np.where(self.data['positive_lockdown_society'].isnull(), 'No', self.data['positive_lockdown_society'])
+        
+        self.data['alcohol_change'] = np.where(self.data['alcohol_change'].isnull(), 'No change', self.data['alcohol_change'])
+        
+        self.data['alcohol_during'] = np.where(self.data['alcohol_during'].isnull(), 'Low level', self.data['alcohol_during'])
+        
+        replace_with_most_common = ["income_band","time_covid_info","smoking_status","covid_exposure"]
+        
+        for table in replace_with_most_common:
+            most_common = self.data[table].value_counts(dropna=False).idxmax()
+            self.data[table] = np.where(self.data[table].isnull(), most_common, self.data[table])
+        
+        for col in self.data.columns:
+            if self.data[col].dtype == 'object':
+                self.data[col] = pd.factorize(self.data[col])[0]
+        
+        
+        
     
-    def process_entry(self, entry: dict[str,str]) -> tuple[list,bool]:
-        try:
-            vect : list[int] = []
-            
-            for key in self.dictionary:
-                if key in self.ignored_columns:
-                    continue
-                if self.dictionary[key] == {}:
-                    vect.append(int(entry[key]))
-                else:
-                    vect.append(self.dictionary[key].get(entry[key], 0))
-                
-                
-            score : float = float(entry[self.score_key])
-            
-            probability : float = int(entry["postweight_unscaled"]) / self.population
-            
-            return vect + [score, probability], True
-        except Exception as e:
-            print(f"Error processing entry {entry}: {e}")
-            return [], False
-        
-        
-        
 if __name__ == "__main__":
     df = pd.read_csv("datos/Resilience_CleanOnly_v1.csv", encoding="latin1")
     
