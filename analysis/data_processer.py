@@ -52,7 +52,8 @@ class DataProcesser:
         self.data = dataset
 
         self.data.rename(columns=self.column_renames, inplace=True)
-        self.population = self.data["weight"].sum()
+        #self.population = self.data["weight"].sum()
+        self.population = len(self.data)
         
     def clean_dataset(self) -> pd.DataFrame:
 
@@ -64,7 +65,7 @@ class DataProcesser:
         for key in keys_drop_na:
             self.data[key].dropna(inplace=True)
             
-        self.data['weight'] = self.data['weight'] / self.population
+        #self.data['weight'] = self.data['weight'] / self.population
             
         self.data['lost_work'] = np.where(self.data['lost_work'].isnull() & (self.data['employment_pre_lockdown']!='Employed'), 'Without work', self.data['lost_work'])
         

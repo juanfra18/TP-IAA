@@ -17,7 +17,7 @@ def train_model(model: nn.Module,
     
     best_val_loss = float('inf')
     best_model_state = model.state_dict()
-    patience = 5
+    patience = 50
     no_improve_epochs = 0
     
     for epoch in range(num_epochs):
@@ -37,7 +37,7 @@ def train_model(model: nn.Module,
             running_loss += loss.item() * inputs.size(0)
         
         epoch_loss = running_loss / len(train_loader.dataset) # pyright: ignore[reportArgumentType]
-        logger.log(f'Epoch {epoch+1}/{num_epochs}, Validation Loss: {epoch_loss:.4f}')
+        logger.log(f'Epoch {epoch+1}/{num_epochs}, Validation Loss: {epoch_loss:.8f}')
         
         if epoch_loss < best_val_loss:
             best_val_loss = epoch_loss

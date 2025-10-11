@@ -14,8 +14,8 @@ import os
 
 
 
-df = pd.read_csv("datos/Resilience_CleanOnly_v1_PREPROCESSED.csv", encoding="latin1")
-sizes = [len(df.columns)-2, 32,32,1]
+df = pd.read_csv("datos/Resilience_CleanOnly_v1_PREPROCESSED_v2.csv", encoding="latin1")
+sizes = [len(df.columns)-1, 32,32,1]
 output_activation = nn.Sigmoid
 intermediate_activation = nn.ReLU
 normalize_output = True
@@ -24,7 +24,7 @@ name = f"model_{sizes}_output_{output_activation.__name__}_intermediate_{interme
 
 comparison_table = pd.read_csv("results/comparison_table.csv")
 
-probabilities = df["weight"]
+#probabilities = df["weight"]
 
 
 weight_path = f"results/{name}.pth" if os.path.exists(f"results/{name}.pth") else None
