@@ -19,6 +19,9 @@ def train_model(model: nn.Module,
     best_model_state = model.state_dict()
     patience = 50
     no_improve_epochs = 0
+    lambda_ = 0.005
+    
+    sigmoid = nn.Sigmoid()
     
     for epoch in range(num_epochs):
         running_loss = 0.0
@@ -27,17 +30,20 @@ def train_model(model: nn.Module,
             optimizer.zero_grad()
             
             outputs = model(inputs)
-            loss = criterion(outputs, labels)
+            loss = criterion(outputs, labels) + lambda_* sigmoid(model.mask).sum()
             loss.backward()
             optimizer.step()
              
         for inputs, labels in val_loader:
             outputs = model(inputs)
-            loss = criterion(outputs, labels)
+            loss = criterion(outputs, labels) + lambda_* sigmoid(model.mask).sum()
             running_loss += loss.item() * inputs.size(0)
+            
+
         
         epoch_loss = running_loss / len(train_loader.dataset) # pyright: ignore[reportArgumentType]
         logger.log(f'Epoch {epoch+1}/{num_epochs}, Validation Loss: {epoch_loss:.8f}')
+        logger.log(f'Mask: {sigmoid(model.mask).detach().numpy()}')
         
         if epoch_loss < best_val_loss:
             best_val_loss = epoch_loss
