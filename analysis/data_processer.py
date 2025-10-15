@@ -59,13 +59,10 @@ class DataProcesser:
 
         self.data = self.data.drop(columns = [c for c in self.data.columns if c not in self.column_renames.values()])
         
-
-        
         keys_drop_na = ["employment_pre_lockdown","bubble_type"]
         for key in keys_drop_na:
             self.data[key].dropna(inplace=True)
             
-        #self.data['weight'] = self.data['weight'] / self.population
             
         self.data['lost_work'] = np.where(self.data['lost_work'].isnull() & (self.data['employment_pre_lockdown']!='Employed'), 'Without work', self.data['lost_work'])
         
