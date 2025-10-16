@@ -6,6 +6,7 @@ from model.trainer import train_model
 from torch.utils.data import DataLoader
 from analysis.logger import Logger
 from model.LinearClamp import LinearClamp
+from model.metrics import metrics
 
 import torch
 import torch.optim as optim
@@ -15,7 +16,7 @@ import os
 
 
 df = pd.read_csv("datos/Resilience_CleanOnly_v1_PREPROCESSED_v2.csv", encoding="latin1")
-sizes = [len(df.columns)-1, 32,32,1]
+sizes = [len(df.columns)-1, 8, 1]
 output_activation = nn.Sigmoid
 intermediate_activation = nn.Tanh
 normalize_output = True
@@ -28,7 +29,7 @@ comparison_table = pd.read_csv("results/comparison_table.csv")
 weight_path = f"results/{name}.pth" if os.path.exists(f"results/{name}.pth") else None
 logger = Logger("results/logs")
 
-train_df = df.sample(frac=0.6, random_state=42)
+train_df = df.sample(frac=0.8, random_state=42)
 val_df = df.drop(train_df.index)
 
 train_data = CustomDataset(train_df, normalize_output)
@@ -38,15 +39,48 @@ val_loader = DataLoader(val_data, batch_size=5, shuffle=False)
 
 model = Model(weight_path,description=name, hidden_sizes=sizes, output_activation=output_activation)  
 criterion = loss()
-optimizer = optim.Adam(model.parameters(), lr=0.001)
+optimizer = optim.Adam(model.parameters(), lr=0.01)
 
-trained_model, val_loss = train_model(model, train_loader, val_loader, criterion, optimizer, 30, logger)
+trained_model, val_loss = train_model(model, train_loader, val_loader, criterion, optimizer, 100, logger)
 
 torch.save(trained_model.state_dict(), f"results/{name}.pth")
 
+
+#Metricas
+trained_model.eval()
+all_predictions = []
+all_labels = []
+
+with torch.no_grad():
+    for inputs, labels in val_loader:
+        outputs = trained_model(inputs)
+        
+        if outputs.dim() == 0:
+            outputs = outputs.unsqueeze(0)
+        if labels.dim() == 0:
+            labels = labels.unsqueeze(0)
+            
+        all_predictions.append(outputs)
+        all_labels.append(labels)
+
+all_predictions = torch.cat(all_predictions, dim=0)
+all_labels = torch.cat(all_labels, dim=0)
+
+metricas = metrics(all_labels, all_predictions)
+
+#logger.log(f"MSE: {metricas['mse']:.6f}")
+#logger.log(f"RMSE: {metricas['rmse']:.6f}")
+#logger.log(f"MAE: {metricas['mae']:.6f}")
+#logger.log(f"SMAPE: {metricas['smape']:.2f}%")
+
 new_row = {
     "name": name,
-    "loss": val_loss
+    "loss": val_loss,
+
+    "mse": metricas['mse'],
+    "rmse": metricas['rmse'],
+    "mae": metricas['mae'],
+    "smape": metricas['smape']    
 }
 
 comparison_table = pd.concat([comparison_table, pd.DataFrame([new_row])], ignore_index=True)
