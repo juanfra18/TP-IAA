@@ -1,49 +1,40 @@
 import matplotlib.pyplot as plt
+import matplotlib.ticker as mticker
 import numpy as np
 import os
 
 
-def plot_split_distribution(train_df=None, val_df=None, test_df=None,
+def plot_split_distribution(train_df, val_df, test_df,
                             labels=("Entrenamiento", "Validación", "Prueba"),
                             colors=("#c7e9c0", "#9ecae1", "#fb6a4a"),
                             figsize=(10, 1.5),
-                            outpath="datos/plots/data_split_distribution.png"):
-    # Resolve counts
-  
-    if train_df is None or val_df is None or test_df is None:
-        raise ValueError("train_df, val_df, and test_df must be provided")
+                            outpath="datos/plots/data_split_distribution.png"):  
+
+
     counts = (len(train_df), len(val_df), len(test_df))
-
+    counts = [int(c) for c in counts]
     total = sum(counts)
-    if total == 0:
-        raise ValueError("Total count is zero")
 
-    # percentages
     fracs = [c / total for c in counts]
-
-    # prepare figure
     fig, ax = plt.subplots(figsize=figsize)
 
-    left = 0.0
+    left = 0
     for frac, label, color, cnt in zip(fracs, labels, colors, counts):
-        ax.barh(0, width=frac, left=left, height=1, color=color, linewidth=0.8)
+        ax.barh(0, width=cnt, left=left, height=1.2, color=color, edgecolor='k', linewidth=0.8)
 
         pct_text = f"{100*frac:.2f}%\n{label}"
-
-        # compute center of this segment in axis fraction coordinates
-        center = left + frac / 2
+        center = left + cnt / 2
         ax.text(center, 0, pct_text, ha='center', va='center', fontsize=10)
-        left += frac
+        left += cnt
 
-    # aesthetics
-    ax.set_xlim(0, 1)
-    ax.set_xticks([])
-    ax.set_ylim(-0.6, 0.6)
+    ax.set_xlim(0, total)
+    ax.set_ylim(-0.6, 0.4)
     ax.set_yticks([])
+    ax.set_xlabel('Cantidad de datos')
 
-
-    # place caption under the axis
-    fig.subplots_adjust(bottom=0.3)
+    ticks = [0, counts[0], counts[0] + counts[1], total]
+    ax.set_xticks(ticks)
+    ax.xaxis.set_major_formatter(mticker.FuncFormatter(lambda x, pos: f"{int(x):,}".replace(',', '.')))
 
     for spine in ax.spines.values():
         spine.set_linewidth(0.8)
@@ -69,7 +60,6 @@ def stratified_split(df, test_size=0.25, val_size=0.10, random_state=42):
 
 
 if __name__ == "__main__":
-    # small demo: try to load datos/Resilience_CleanOnly_v1_PREPROCESSED.csv if present
     import pandas as pd
     demo_path = "/home/moya/TP-IAA/datos/Resilience_CleanOnly_v1_PREPROCESSED_v2.csv"
     print(demo_path)
