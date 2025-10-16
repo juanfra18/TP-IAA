@@ -4,8 +4,9 @@ from model.loader import CustomDataset
 from model.model import Model
 from model.trainer import train_model
 from torch.utils.data import DataLoader
+from analysis.data_split import stratified_split
 from analysis.logger import Logger
-from model.LinearClamp import LinearClamp
+
 
 import torch
 import torch.optim as optim
@@ -15,7 +16,7 @@ import os
 
 
 df = pd.read_csv("datos/Resilience_CleanOnly_v1_PREPROCESSED_v2.csv", encoding="latin1")
-sizes = [len(df.columns)-1, 32,32,1]
+sizes = [len(df.columns)-1, 32,16,1]
 output_activation = nn.Sigmoid
 intermediate_activation = nn.ReLU
 normalize_output = True
@@ -30,8 +31,7 @@ comparison_table = pd.read_csv("results/comparison_table.csv")
 weight_path = f"results/{name}.pth" if os.path.exists(f"results/{name}.pth") else None
 logger = Logger("results/logs")
 
-train_df = df.sample(frac=0.6, random_state=42)
-val_df = df.drop(train_df.index)
+train_df, val_df, test_df = stratified_split(df)
 
 train_data = CustomDataset(train_df, normalize_output)
 val_data = CustomDataset(val_df, normalize_output)
