@@ -1,5 +1,5 @@
-
 import pandas as pd
+from model.eval import evaluate_model
 from model.loader import CustomDataset
 from model.model import Model
 from model.trainer import train_model
@@ -11,12 +11,16 @@ from analysis.logger import Logger
 import torch
 import torch.optim as optim
 import torch.nn as nn
-import os 
+import os
 
 
+# Hyperparams
+EPOCHS = 30
+BATCH_SIZE = 2
+LEARNING_RATE = 0.001
 
 df = pd.read_csv("datos/Resilience_CleanOnly_v1_PREPROCESSED_v2.csv", encoding="latin1")
-sizes = [len(df.columns)-1, 32,16,1]
+sizes = [len(df.columns) - 1, 32, 16, 1]
 output_activation = nn.Sigmoid
 intermediate_activation = nn.ReLU
 normalize_output = True
@@ -25,7 +29,7 @@ name = f"model_{sizes}_output_{output_activation.__name__}_intermediate_{interme
 
 comparison_table = pd.read_csv("results/comparison_table.csv")
 
-#probabilities = df["weight"]
+# probabilities = df["weight"]
 
 
 weight_path = f"results/{name}.pth" if os.path.exists(f"results/{name}.pth") else None
@@ -35,21 +39,42 @@ train_df, val_df, test_df = stratified_split(df)
 
 train_data = CustomDataset(train_df, normalize_output)
 val_data = CustomDataset(val_df, normalize_output)
-train_loader = DataLoader(train_data, batch_size=2, shuffle=True)
-val_loader = DataLoader(val_data, batch_size=2, shuffle=False)
+train_loader = DataLoader(train_data, batch_size=BATCH_SIZE, shuffle=True)
+val_loader = DataLoader(val_data, batch_size=BATCH_SIZE, shuffle=True)
 
-model = Model(weight_path,description=name, hidden_sizes=sizes, output_activation=output_activation)  
+model = Model(
+    weight_path,
+    description=name,
+    hidden_sizes=sizes,
+    output_activation=output_activation,
+)
 criterion = loss()
-optimizer = optim.Adam(model.parameters(), lr=0.001)
+optimizer = optim.Adam(model.parameters(), lr=LEARNING_RATE)
 
-trained_model, val_loss = train_model(model, train_loader, val_loader, criterion, optimizer, 30, logger)
+trained_model, val_loss = train_model(
+    model, train_loader, val_loader, criterion, optimizer, EPOCHS, logger
+)
 
 torch.save(trained_model.state_dict(), f"results/{name}.pth")
 
-new_row = {
-    "name": name,
-    "loss": val_loss
-}
+new_row = {"name": name, "loss": val_loss}
 
-comparison_table = pd.concat([comparison_table, pd.DataFrame([new_row])], ignore_index=True)
+
+# Evaluate on test
+test_data = CustomDataset(test_df, normalize_output)
+test_loader = DataLoader(test_data, batch_size=BATCH_SIZE, shuffle=False)
+
+preds, trues, metrics = evaluate_model(trained_model, test_loader, normalize_output)
+
+new_row.update(
+    {"test_mse": metrics["mse"], "test_mae": metrics["mae"], "test_r2": metrics["r2"]}
+)
+comparison_table = pd.concat(
+    [comparison_table, pd.DataFrame([new_row])], ignore_index=True
+)
 comparison_table.to_csv("results/comparison_table.csv", index=False)
+
+
+logger.log(
+    f"Test metrics for {name}: MSE={metrics['mse']:.4f}, MAE={metrics['mae']:.4f}, R2={metrics['r2']:.4f}"
+)

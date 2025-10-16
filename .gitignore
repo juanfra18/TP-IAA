@@ -80,3 +80,8 @@ logs/
 *.swp
 *~
 
+# uv
+uv.lock
+.python-version
+pyproject.toml
+
