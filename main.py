@@ -7,7 +7,7 @@ from torch.utils.data import DataLoader
 from analysis.logger import Logger
 from analysis.data_split import stratified_split
 from model.LinearClamp import LinearClamp
-from model.metrics import metrics
+from model.metrics import evaluar_modelo
 
 import torch
 import torch.optim as optim
@@ -17,7 +17,7 @@ import os
 
 
 df = pd.read_csv("datos/Resilience_CleanOnly_v1_PREPROCESSED_v2.csv", encoding="latin1")
-sizes = [len(df.columns)-1, 8, 1]
+sizes = [len(df.columns)-1, 32, 16, 1]
 output_activation = nn.Sigmoid
 intermediate_activation = nn.Tanh
 normalize_output = True
@@ -50,26 +50,9 @@ torch.save(trained_model.state_dict(), f"results/{name}.pth")
 
 
 #Metricas
-trained_model.eval()
-all_predictions = []
-all_labels = []
 
-with torch.no_grad():
-    for inputs, labels in test_loader:
-        outputs = trained_model(inputs)
-        
-        if outputs.dim() == 0:
-            outputs = outputs.unsqueeze(0)
-        if labels.dim() == 0:
-            labels = labels.unsqueeze(0)
-            
-        all_predictions.append(outputs)
-        all_labels.append(labels)
-
-all_predictions = torch.cat(all_predictions, dim=0)
-all_labels = torch.cat(all_labels, dim=0)
-
-metricas = metrics(all_labels, all_predictions)
+metricas_train = evaluar_modelo(trained_model, train_loader , normalize_output)
+metricas_val = evaluar_modelo(trained_model, val_loader , normalize_output)
 
 #logger.log(f"MSE: {metricas['mse']:.6f}")
 #logger.log(f"RMSE: {metricas['rmse']:.6f}")
@@ -80,11 +63,16 @@ new_row = {
     "name": name,
     "loss": val_loss,
 
-    "mse": metricas['mse'],
-    "rmse": metricas['rmse'],
-    "mae": metricas['mae'],
-    "smape": metricas['smape']    
-}
+    "train_mse": metricas_train['mse'],
+    "train_rmse": metricas_train['rmse'],
+    "train_mae": metricas_train['mae'],
+    "train_smape": metricas_train['smape'],
+
+    "val_mse": metricas_val['mse'],
+    "val_rmse": metricas_val['rmse'],
+    "val_mae": metricas_val['mae'],
+    "val_smape": metricas_val['smape'],
+}   
 
 comparison_table = pd.concat([comparison_table, pd.DataFrame([new_row])], ignore_index=True)
 comparison_table.to_csv("results/comparison_table.csv", index=False)
