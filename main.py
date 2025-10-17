@@ -5,6 +5,7 @@ from model.model import Model
 from model.trainer import train_model
 from torch.utils.data import DataLoader
 from analysis.logger import Logger
+from analysis.data_split import stratified_split
 from model.LinearClamp import LinearClamp
 from model.metrics import metrics
 
@@ -29,13 +30,15 @@ comparison_table = pd.read_csv("results/comparison_table.csv")
 weight_path = f"results/{name}.pth" if os.path.exists(f"results/{name}.pth") else None
 logger = Logger("results/logs")
 
-train_df = df.sample(frac=0.8, random_state=42)
-val_df = df.drop(train_df.index)
+train_df, val_df, test_df = stratified_split(df)
 
 train_data = CustomDataset(train_df, normalize_output)
 val_data = CustomDataset(val_df, normalize_output)
+test_data = CustomDataset(test_df, normalize_output)
 train_loader = DataLoader(train_data, batch_size=5, shuffle=True)
 val_loader = DataLoader(val_data, batch_size=5, shuffle=False)
+test_loader = DataLoader(test_data, batch_size=5, shuffle=False)
+
 
 model = Model(weight_path,description=name, hidden_sizes=sizes, output_activation=output_activation)  
 criterion = loss()
@@ -52,7 +55,7 @@ all_predictions = []
 all_labels = []
 
 with torch.no_grad():
-    for inputs, labels in val_loader:
+    for inputs, labels in test_loader:
         outputs = trained_model(inputs)
         
         if outputs.dim() == 0:
