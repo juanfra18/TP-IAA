@@ -21,7 +21,7 @@ LEARNING_RATE = 0.001
 
 df = pd.read_csv("datos/Resilience_CleanOnly_v1_PREPROCESSED_v2.csv", encoding="latin1")
 sizes = [len(df.columns) - 1, 32, 16, 1]
-output_activation = nn.Sigmoid
+output_activation = nn.Identity
 intermediate_activation = nn.ReLU
 normalize_output = True
 loss = nn.MSELoss
@@ -47,6 +47,7 @@ model = Model(
     description=name,
     hidden_sizes=sizes,
     output_activation=output_activation,
+    dropout_p=0.5
 )
 criterion = loss()
 optimizer = optim.Adam(model.parameters(), lr=LEARNING_RATE)
