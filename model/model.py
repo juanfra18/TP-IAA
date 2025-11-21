@@ -8,37 +8,50 @@ class Model(nn.Module):
         self,
         weight_path: str | None,
         description: str,
+        input_size: int,
         hidden_sizes: list[int],
-        hidden_activation = nn.ReLU,
-        output_activation = nn.Sigmoid,
-        dropout_p: float = 0.5,   # <-- dropout probability
+        hidden_activation,
+        output_activation,
+        dropout_p: float = 0.5,
     ) -> None:
         super(Model, self).__init__()
 
-        layers: list[nn.Module] = []
+        self.input_size = input_size
 
+        layers: list[nn.Module] = []
+        
+        layers.append(nn.Linear(input_size, hidden_sizes[0]))
+        
         for i in range(len(hidden_sizes) - 1):
             in_features = hidden_sizes[i]
             out_features = hidden_sizes[i + 1]
             is_last = (i == len(hidden_sizes) - 2)
 
-            # Linear layer
             layers.append(nn.Linear(in_features, out_features))
 
             if is_last:
-                # Output activation only on last layer
                 layers.append(output_activation())
             else:
-                # Hidden activation + dropout on hidden layers
                 layers.append(hidden_activation())
                 if dropout_p is not None and dropout_p > 0:
                     layers.append(nn.Dropout(p=dropout_p))
 
         self.inner = nn.ModuleList(layers)
         self.description = description
+        self.weight_path = weight_path
+        self.description = description
+        self.input_size = input_size
+        self.hidden_sizes = hidden_sizes
+        self.hidden_activation = hidden_activation
+        self.output_activation = output_activation
+        self.dropout_p = dropout_p
 
         if weight_path:
             self.load_state_dict(torch.load(weight_path))
+            
+    def reset_parameters(self) -> None:
+        for layer in self.inner:
+            layer.reset_para
         
     def forward(self, x):
         for layer in self.inner:
