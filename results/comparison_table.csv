@@ -29,4 +29,6 @@ name,loss,rmse_orig,mae_orig
 "model_[33, 16, 1]_output_Sigmoid_intermediate_ReLU_normalized_data_True_loss_MSELoss",0.0138932432622703,,
 "model_[33, 16, 1]_output_Sigmoid_intermediate_ReLU_normalized_data_True_loss_MSELoss",0.0137050780507315,,
 "model_[33, 16, 1]_output_Sigmoid_intermediate_ReLU_normalized_data_True_loss_MSELoss",0.0138374735329871,,
-"model_[33, 16, 1]_output_Sigmoid_intermediate_ReLU_normalized_data_True_loss_MSELoss",0.013581121599309874,,
+"model_[33, 16, 1]_output_Sigmoid_intermediate_ReLU_normalized_data_True_loss_MSELoss",0.0135811215993098,,
+"model_[33, 16, 1]_output_Identity_intermediate_ReLU_normalized_data_True_loss_MSELoss",0.0313894361731291,,
+"model_[33, 16, 1]_output_Identity_intermediate_ReLU_normalized_data_True_loss_MSELoss",0.031965361096622985,,
