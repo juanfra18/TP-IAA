@@ -11,11 +11,11 @@ class CustomDataset(torch.utils.data.Dataset):
         self.data =  df
         self.column_count = len(self.data.columns) - 1
         
-        self.labels = self.data["target"]
+        self.labels = self.data["target"].astype('float64')
         self.data = self.data.drop(columns=["target"])
         
         if normalize_output:
-            self.labels = self.labels / DataProcesser.MAX_SCORE
+            self.labels = self.labels.astype('float64') / DataProcesser.MAX_SCORE
         
     def __len__(self) -> int:
         return len(self.data)
