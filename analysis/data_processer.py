@@ -1,6 +1,5 @@
 import pandas as pd
 import numpy as np
-from sympy import true
 
 class DataProcesser:
     
@@ -63,7 +62,7 @@ class DataProcesser:
         
         keys_drop_na = ["employment_pre_lockdown","bubble_type"]
         for key in keys_drop_na:
-            self.data[key].dropna(inplace=True)
+            self.data.dropna(subset=[key], inplace=True)
             
         #self.data['weight'] = self.data['weight'] / self.population
             

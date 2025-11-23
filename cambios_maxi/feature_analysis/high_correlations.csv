@@ -1,0 +1,6 @@
+Feature_1,Feature_2,Correlation
+employment_pre_lockdown,lost_work,0.9107700591684097
+work_type,lost_work,0.8781493746219464
+less_work,lost_work,0.872363557751691
+employment_pre_lockdown,work_type,0.8397110540150358
+employment_pre_lockdown,less_work,0.8351521681739869

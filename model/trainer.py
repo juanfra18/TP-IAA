@@ -35,7 +35,8 @@ class Trainer:
             hidden_sizes=model.hidden_sizes,
             hidden_activation=model.hidden_activation,
             output_activation=model.output_activation,
-            dropout_p=model.dropout_p
+            dropout_p=model.dropout_p,
+            use_batch_norm=model.use_batch_norm
         )
         
         optimizer = torch.optim.Adam(model.parameters(), lr=0.001)

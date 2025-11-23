@@ -53,7 +53,12 @@ def evaluate_model(model: nn.Module, loader: DataLoader, normalize_output: bool)
     mse = mean_squared_error(trues, preds)
     mae = mean_absolute_error(trues, preds)
     r2 = r2_score(trues, preds)
+    
+    # Calculate MAE standard deviation (std of absolute errors)
+    absolute_errors = np.abs(trues - preds)
+    mae_std = np.std(absolute_errors)
+    
     plot_evaluation_results(trues, preds, model.description)
-    return preds, trues, {"mse": float(mse), "mae": float(mae), "r2": float(r2)}
+    return preds, trues, {"mse": float(mse), "mae": float(mae), "mae_std": float(mae_std), "r2": float(r2)}
 
 

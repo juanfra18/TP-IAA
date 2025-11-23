@@ -13,6 +13,7 @@ class Model(nn.Module):
         hidden_activation,
         output_activation,
         dropout_p: float = 0.5,
+        use_batch_norm: bool = False,
     ) -> None:
         super(Model, self).__init__()
 
@@ -32,26 +33,28 @@ class Model(nn.Module):
             if is_last:
                 layers.append(output_activation())
             else:
+                if use_batch_norm:
+                    layers.append(nn.BatchNorm1d(out_features))
                 layers.append(hidden_activation())
                 if dropout_p is not None and dropout_p > 0:
                     layers.append(nn.Dropout(p=dropout_p))
 
         self.inner = nn.ModuleList(layers)
-        self.description = description
         self.weight_path = weight_path
         self.description = description
-        self.input_size = input_size
         self.hidden_sizes = hidden_sizes
         self.hidden_activation = hidden_activation
         self.output_activation = output_activation
         self.dropout_p = dropout_p
+        self.use_batch_norm = use_batch_norm
 
         if weight_path:
             self.load_state_dict(torch.load(weight_path))
             
     def reset_parameters(self) -> None:
         for layer in self.inner:
-            layer.reset_para
+            if hasattr(layer, 'reset_parameters'):
+                layer.reset_parameters()
         
     def forward(self, x):
         for layer in self.inner:

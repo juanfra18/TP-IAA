@@ -1,0 +1,2 @@
+model,avg_mae,std_mae,avg_mae_std,avg_r2,std_r2,n_folds,features_dropped,batch_norm,architecture
+improved_model_kfold,3.5506453250025367,0.09298626795469796,2.8722773417433745,0.3595330331467542,0.03641089346240239,5,"less_work, lost_work",True,"[64, 32, 16, 1]"

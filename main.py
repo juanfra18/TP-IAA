@@ -17,14 +17,14 @@ import os
 
 # Hyperparams
 EPOCHS = 30
-BATCH_SIZE = 2
+BATCH_SIZE = 32
 LEARNING_RATE = 0.001
 
 df = pd.read_csv("datos/Resilience_CleanOnly_v1_PREPROCESSED_v2.csv", encoding="latin1")
 sizes = [len(df.columns) - 1, 32, 16, 1]
 output_activation = nn.Identity
 intermediate_activation = nn.ReLU
-normalize_output = True
+normalize_output = False
 loss = nn.MSELoss
 name = f"model_{sizes}_output_{output_activation.__name__}_intermediate_{intermediate_activation.__name__}_normalized_data_{normalize_output}_loss_{loss.__name__}"
 
@@ -78,7 +78,7 @@ test_loader = DataLoader(test_data, batch_size=BATCH_SIZE, shuffle=False)
 preds, trues, metrics = evaluate_model(trained_model, test_loader, normalize_output)
 
 new_row.update(
-    {"test_mse": metrics["mse"], "test_mae": metrics["mae"], "test_r2": metrics["r2"]}
+    {"test_mse": metrics["mse"], "test_mae": metrics["mae"], "test_mae_std": metrics["mae_std"], "test_r2": metrics["r2"]}
 )
 comparison_table = pd.concat(
     [comparison_table, pd.DataFrame([new_row])], ignore_index=True
@@ -87,5 +87,5 @@ comparison_table.to_csv("results/comparison_table.csv", index=False)
 
 
 logger.log(
-    f"Test metrics for {name}: MSE={metrics['mse']:.4f}, MAE={metrics['mae']:.4f}, R2={metrics['r2']:.4f}"
+    f"Test metrics for {name}: MSE={metrics['mse']:.4f}, MAE={metrics['mae']:.4f} ± {metrics['mae_std']:.4f}, R2={metrics['r2']:.4f}"
 )
