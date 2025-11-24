@@ -45,4 +45,5 @@ name,loss,rmse_orig,mae_orig,test_mse,test_mae,test_r2
 "model_[10, 512, 1]_output_Identity_intermediate_ReLU_normalized_data_True_loss_MSELoss",0.0319075551984048,,,20.481360509152747,3.554593597288692,0.3611876012009591
 "model_[10, 1028, 1]_output_Identity_intermediate_ReLU_normalized_data_True_loss_MSELoss",0.0319025825128715,,,20.39444933345414,3.52443831313091,0.3638983555283224
 "model_[10, 1024, 10, 1]_output_Identity_intermediate_ReLU_normalized_data_True_loss_MSELoss",0.0317246255370369,,,21.07347866437621,3.6626156762294055,0.3427194716574295
-"model_[10, 100, 2000, 100, 10, 1]_output_Identity_intermediate_ReLU_normalized_data_True_loss_MSELoss",0.032379146392011775,,,21.04434914589148,3.7060140328119613,0.34362801958181066
+"model_[10, 100, 2000, 100, 10, 1]_output_Identity_intermediate_ReLU_normalized_data_True_loss_MSELoss",0.0323791463920117,,,21.04434914589148,3.706014032811961,0.3436280195818106
+"model_[10, 32, 16, 1]_output_Identity_intermediate_ReLU_normalized_data_True_loss_MSELoss",0.031634653664448044,,,19.607863467561348,3.4298231641986168,0.3884319212369014

@@ -1,6 +1,7 @@
 import matplotlib.pyplot as plt
 import torch 
 import torch.nn as nn
+from torch.optim.lr_scheduler import ReduceLROnPlateau
 
 from analysis.logger import Logger
 from model.model import Model
@@ -43,7 +44,7 @@ class Trainer:
         
         
 
-    def train_model(self, model : nn.Module, optimizer : torch.optim.Optimizer, mask : list[int], log_basic, plot_losses : bool = True, save_plots : bool = True, log_during_training : bool = True) -> tuple[nn.Module, float]:
+    def train_model(self, model : nn.Module, optimizer : torch.optim.Optimizer, mask : list[int], log_basic, plot_losses : bool = True, save_plots : bool = True, log_during_training : bool = True, scheduler = None) -> tuple[nn.Module, float]:
         
         model.train()
         
@@ -69,6 +70,13 @@ class Trainer:
 
             epoch_val_loss = self.validate_epoch(model, mask_tensor)
             val_losses.append(epoch_val_loss)
+
+            if scheduler is not None:
+                # ReduceLROnPlateau necesita el val_loss
+                if isinstance(scheduler, ReduceLROnPlateau):
+                    scheduler.step(epoch_val_loss)
+                else:
+                    scheduler.step()
 
             if log_during_training:
                 self.logger.log(

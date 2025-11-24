@@ -56,6 +56,14 @@ model = Model(
 criterion = loss()
 optimizer = optim.Adam(model.parameters(), lr=LEARNING_RATE)
 
+scheduler = optim.lr_scheduler.ReduceLROnPlateau(
+    optimizer,
+    mode="min",
+    factor=0.5, # Multiplicador al LR cuando no mejor el loss
+    patience=10, # Cuántas epochs espera antes de cambiar el LR
+)
+
+
 trained_model, val_loss = Trainer(
     train_loader=train_loader,
     val_loader=val_loader,
@@ -64,7 +72,7 @@ trained_model, val_loss = Trainer(
     optimizer=optimizer,
     num_epochs=EPOCHS,
     logger=logger
-).train_model(model, optimizer, np.ones(len(train_data.get_column_names()), dtype=int).tolist(),True,True,True,True)
+).train_model(model, optimizer, np.ones(len(train_data.get_column_names()), dtype=int).tolist(),True,True,True,True, scheduler)
 
 torch.save(trained_model.state_dict(), f"results/{name}.pth")
 
