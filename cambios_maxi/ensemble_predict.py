@@ -90,8 +90,17 @@ def ensemble_predict(models, data_loader):
 def evaluate_predictions(preds, trues, description="Model"):
     """Evaluate predictions and return metrics."""
     mse = mean_squared_error(trues, preds)
+    rmse = np.sqrt(mse)
     mae = mean_absolute_error(trues, preds)
     r2 = r2_score(trues, preds)
+    
+    # Calculate SMAPE
+    # Avoid division by zero by adding a small epsilon or handling zeros
+    denominator = (np.abs(trues) + np.abs(preds))
+    # Replace 0s with 1s to avoid division by zero (numerator will be 0 anyway)
+    denominator = np.where(denominator == 0, 1, denominator)
+    
+    smape = 100 * np.mean(2 * np.abs(preds - trues) / denominator)
     
     # Calculate MAE std
     absolute_errors = np.abs(trues - preds)
@@ -100,7 +109,9 @@ def evaluate_predictions(preds, trues, description="Model"):
     return {
         'description': description,
         'mse': mse,
+        'rmse': rmse,
         'mae': mae,
+        'smape': smape,
         'mae_std': mae_std,
         'r2': r2
     }
@@ -160,9 +171,11 @@ def main():
     ensemble_metrics = evaluate_predictions(ensemble_preds, ground_truth, "Ensemble")
     
     logger.log(f"\nENSEMBLE RESULTS:")
-    logger.log(f"   MSE: {ensemble_metrics['mse']:.4f}")
-    logger.log(f"   MAE: {ensemble_metrics['mae']:.4f} ± {ensemble_metrics['mae_std']:.4f}")
-    logger.log(f"   R²:  {ensemble_metrics['r2']:.4f}")
+    logger.log(f"   MSE:   {ensemble_metrics['mse']:.4f}")
+    logger.log(f"   RMSE:  {ensemble_metrics['rmse']:.4f}")
+    logger.log(f"   MAE:   {ensemble_metrics['mae']:.4f} ± {ensemble_metrics['mae_std']:.4f}")
+    logger.log(f"   SMAPE: {ensemble_metrics['smape']:.4f}%")
+    logger.log(f"   R²:    {ensemble_metrics['r2']:.4f}")
     
     avg_individual_mae = np.mean([m['mae'] for m in individual_results])
     std_individual_mae = np.std([m['mae'] for m in individual_results])

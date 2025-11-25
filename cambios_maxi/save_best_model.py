@@ -7,7 +7,6 @@ def save_best_model():
     
     ensemble_state = {}
     
-    # Load each fold model
     for i in range(1, 6):
         model_path = f"results/improved_model_fold{i}.pth"
         if os.path.exists(model_path):
@@ -18,12 +17,10 @@ def save_best_model():
             print(f"Error: {model_path} not found!")
             return
 
-    # Save as single file
     output_path = "best_model.pth"
     torch.save(ensemble_state, output_path)
     print(f"✅ Successfully saved ensemble model to {output_path}")
     
-    # Verify loading
     print("Verifying load...")
     loaded = torch.load(output_path)
     print(f"Loaded keys: {list(loaded.keys())}")
