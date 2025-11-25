@@ -63,29 +63,22 @@ N_FOLDS = 5
 RANDOM_SEED = 42
 
 
-# ============================================================================
-# Helper Functions
-# ============================================================================
-
 def train_single_model(train_df, val_df, test_df, model_description, logger, fold_num=None):
     """Train a single model with the improved configuration."""
     
-    # Create datasets with input scaling
     train_data = CustomDataset(train_df, NORMALIZE_OUTPUT, scaler=None, fit_scaler=True)
-    # Use the fitted scaler from training data for val and test
     val_data = CustomDataset(val_df, NORMALIZE_OUTPUT, scaler=train_data.scaler, fit_scaler=False)
     test_data = CustomDataset(test_df, NORMALIZE_OUTPUT, scaler=train_data.scaler, fit_scaler=False)
     
-    # Create data loaders
+
     train_loader = DataLoader(train_data, batch_size=BATCH_SIZE, shuffle=True)
     val_loader = DataLoader(val_data, batch_size=BATCH_SIZE, shuffle=False)
     test_loader = DataLoader(test_data, batch_size=BATCH_SIZE, shuffle=False)
     
-    # Calculate input size
     input_size = len(train_data.get_column_names())
     sizes = [input_size] + HIDDEN_LAYERS
     
-    # Create model
+
     model = Model(
         weight_path=None,
         description=model_description,
@@ -97,7 +90,7 @@ def train_single_model(train_df, val_df, test_df, model_description, logger, fol
         use_batch_norm=USE_BATCH_NORM
     )
     
-    # Create optimizer
+
     optimizer = optim.Adam(model.parameters(), lr=LEARNING_RATE)
     
     # Improvement 6: Add learning rate scheduler
@@ -105,7 +98,6 @@ def train_single_model(train_df, val_df, test_df, model_description, logger, fol
         optimizer, mode='min', factor=0.5, patience=10
     )
     
-    # Create trainer with custom trainer class that supports scheduler
     criterion = LOSS_FUNCTION()
     trainer = ImprovedTrainer(
         train_loader=train_loader,
@@ -119,20 +111,17 @@ def train_single_model(train_df, val_df, test_df, model_description, logger, fol
         logger=logger
     )
     
-    # Train model
     trained_model, best_val_loss = trainer.train_model(
         model, optimizer, 
         mask=np.ones(input_size, dtype=int).tolist(),
         log_basic=True,
         plot_losses=True,
         save_plots=True,
-        log_during_training=False  # Less verbose
+        log_during_training=False
     )
     
-    # Evaluate on test set
     preds, trues, metrics = evaluate_model(trained_model, test_loader, NORMALIZE_OUTPUT)
     
-    # Save model if fold number provided
     if fold_num is not None:
         model_path = f"results/improved_model_fold{fold_num}.pth"
         torch.save(trained_model.state_dict(), model_path)
@@ -155,18 +144,15 @@ def train_with_kfold(df, logger):
     for fold, (train_val_idx, test_idx) in enumerate(kfold.split(df), 1):
         logger.log(f"\n--- Fold {fold}/{N_FOLDS} ---")
         
-        # Split train_val into train and validation
         train_val_df = df.iloc[train_val_idx]
         test_df = df.iloc[test_idx]
         
-        # Further split train_val into train (80%) and val (20%)
         val_size = int(0.2 * len(train_val_df))
         val_df = train_val_df.iloc[:val_size]
         train_df = train_val_df.iloc[val_size:]
         
         logger.log(f"Train: {len(train_df)}, Val: {len(val_df)}, Test: {len(test_df)}")
         
-        # Train model
         model_desc = f"improved_model_fold{fold}"
         model, metrics = train_single_model(train_df, val_df, test_df, model_desc, logger, fold_num=fold)
         
@@ -174,11 +160,9 @@ def train_with_kfold(df, logger):
         
         logger.log(f"Fold {fold} Test MAE: {metrics['mae']:.4f} ± {metrics['mae_std']:.4f}")
         
-        # Clean up
         del model
         torch.cuda.empty_cache() if torch.cuda.is_available() else None
     
-    # Calculate average metrics across folds
     avg_metrics = {
         'mse': np.mean([m['mse'] for m in fold_metrics]),
         'mae': np.mean([m['mae'] for m in fold_metrics]),
@@ -203,10 +187,6 @@ def train_with_kfold(df, logger):
     
     return avg_metrics, std_metrics, fold_metrics
 
-
-# ============================================================================
-# Improved Trainer with LR Scheduler
-# ============================================================================
 
 class ImprovedTrainer(Trainer):
     """Extended Trainer class with learning rate scheduler support."""
@@ -275,13 +255,7 @@ class ImprovedTrainer(Trainer):
         
         return model, best_val_loss
 
-
-# ============================================================================
-# Main Training Script
-# ============================================================================
-
 def main():
-    # Setup logger
     logger = Logger("results/logs")
     
     logger.log("\n" + "="*60)
@@ -298,7 +272,6 @@ def main():
     logger.log(f"7. ✓ K-Fold Cross-Validation: {N_FOLDS} folds")
     logger.log("="*60 + "\n")
     
-    # Load and preprocess data
     logger.log("Loading data...")
     df = pd.read_csv("datos/Resilience_CleanOnly_v1_PREPROCESSED_v2.csv", encoding="latin1")
     logger.log(f"Original dataset: {df.shape}")
@@ -312,12 +285,11 @@ def main():
         # Train with K-Fold CV
         avg_metrics, std_metrics, fold_metrics = train_with_kfold(df, logger)
         
-        # Save results
+
         results_df = pd.DataFrame(fold_metrics)
         results_df.to_csv("results/kfold_results.csv", index=False)
         logger.log("Results saved to results/kfold_results.csv")
-        
-        # Save summary
+
         summary = pd.DataFrame([{
             'model': 'improved_model_kfold',
             'avg_mae': avg_metrics['mae'],
@@ -333,7 +305,6 @@ def main():
         summary.to_csv("results/improved_model_summary.csv", index=False)
         
     else:
-        # Train single model with regular train/val/test split
         logger.log("Using single train/val/test split...\n")
         train_df, val_df, test_df = stratified_split(df)
         
@@ -345,7 +316,6 @@ def main():
         logger.log(f"MAE: {metrics['mae']:.4f} ± {metrics['mae_std']:.4f}")
         logger.log(f"R²: {metrics['r2']:.4f}")
         
-        # Save model
         torch.save(model.state_dict(), f"results/{model_desc}.pth")
         logger.log(f"\nModel saved to results/{model_desc}.pth")
 

@@ -12,16 +12,17 @@ import numpy as np
 import torch
 import torch.nn as nn
 from torch.utils.data import DataLoader
+from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score
+import sys
+import os
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 from model.model import Model
 from model.loader import CustomDataset
 from analysis.data_split import stratified_split
 from analysis.logger import Logger
-from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score
-import os
 
 
-# Configuration matching the trained models
 FEATURES_TO_DROP = ['less_work', 'lost_work']
 HIDDEN_LAYERS = [64, 32, 16, 1]
 USE_BATCH_NORM = True
@@ -32,7 +33,7 @@ BATCH_SIZE = 32
 
 def load_fold_model(fold_num, input_size):
     """Load a trained model from a specific fold."""
-    model_path = f"results/improved_model_fold{fold_num}.pth"
+    model_path = f"improved_model_fold{fold_num}.pth"
     
     if not os.path.exists(model_path):
         raise FileNotFoundError(f"Model not found: {model_path}")
@@ -112,24 +113,20 @@ def main():
     logger.log("ENSEMBLE PREDICTION - Averaging 5 Fold Models")
     logger.log("="*60)
     
-    # Load and prepare data
     logger.log("\nLoading data...")
-    df = pd.read_csv("datos/Resilience_CleanOnly_v1_PREPROCESSED_v2.csv", encoding="latin1")
+    df = pd.read_csv("../datos/Resilience_CleanOnly_v1_PREPROCESSED_v2.csv", encoding="latin1")
     df = df.drop(columns=FEATURES_TO_DROP)
     logger.log(f"Dataset shape after dropping features: {df.shape}")
     
-    # Use same split as original training for fair comparison
     train_df, val_df, test_df = stratified_split(df)
     logger.log(f"Test set size: {len(test_df)}")
     
-    # Create test dataset and loader with input scaling
     test_data = CustomDataset(test_df, NORMALIZE_OUTPUT, scaler=None, fit_scaler=True)
     test_loader = DataLoader(test_data, batch_size=BATCH_SIZE, shuffle=False)
     
     input_size = len(test_data.get_column_names())
     logger.log(f"Input features: {input_size}")
     
-    # Load all 5 fold models
     logger.log("\nLoading 5 fold models...")
     models = []
     for fold in range(1, 6):
@@ -143,7 +140,6 @@ def main():
     
     logger.log(f"\nSuccessfully loaded {len(models)} models")
     
-    # Get individual model predictions
     logger.log("\n" + "-"*60)
     logger.log("Individual Model Performance on Test Set:")
     logger.log("-"*60)
@@ -163,12 +159,11 @@ def main():
     ensemble_preds, ground_truth, all_preds = ensemble_predict(models, test_loader)
     ensemble_metrics = evaluate_predictions(ensemble_preds, ground_truth, "Ensemble")
     
-    logger.log(f"\n🎯 ENSEMBLE RESULTS:")
+    logger.log(f"\nENSEMBLE RESULTS:")
     logger.log(f"   MSE: {ensemble_metrics['mse']:.4f}")
     logger.log(f"   MAE: {ensemble_metrics['mae']:.4f} ± {ensemble_metrics['mae_std']:.4f}")
     logger.log(f"   R²:  {ensemble_metrics['r2']:.4f}")
     
-    # Compare with average of individual models
     avg_individual_mae = np.mean([m['mae'] for m in individual_results])
     std_individual_mae = np.std([m['mae'] for m in individual_results])
     
@@ -180,26 +175,22 @@ def main():
     logger.log(f"Improvement:           {avg_individual_mae - ensemble_metrics['mae']:.4f} MAE reduction")
     logger.log("="*60 + "\n")
     
-    # Save results
     results_df = pd.DataFrame(individual_results + [ensemble_metrics])
     results_df.to_csv("results/ensemble_comparison.csv", index=False)
     logger.log("Results saved to results/ensemble_comparison.csv")
     
-    # Save ensemble predictions
     predictions_df = pd.DataFrame({
         'true': ground_truth,
         'ensemble_pred': ensemble_preds,
         'absolute_error': np.abs(ground_truth - ensemble_preds)
     })
     
-    # Add individual model predictions
     for i, preds in enumerate(all_preds, 1):
         predictions_df[f'fold{i}_pred'] = preds
     
     predictions_df.to_csv("results/ensemble_predictions.csv", index=False)
     logger.log("Predictions saved to results/ensemble_predictions.csv")
     
-    # Calculate prediction variance (model agreement)
     pred_variance = np.var(all_preds, axis=0)
     avg_variance = np.mean(pred_variance)
     logger.log(f"\nModel agreement (avg variance): {avg_variance:.4f}")
